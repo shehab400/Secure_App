@@ -1,0 +1,7 @@
+Transfer to: mohamed, Amount: 20
+Transfer to: mohamed, Amount: 20
+Transfer to: mohamed, Amount: 22
+Transfer to: mohamed, Amount: 22
+
+Transfer to: gfg, Amount: 10
+Transfer to: shehab, Amount: 1000000
