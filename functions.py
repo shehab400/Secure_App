@@ -23,3 +23,6 @@ def is_valid_email(email):
 def is_valid_password(password):
     return len(password) >= 8 and re.search(r"\d", password) and re.search(r"[A-Z]", password)
 
+# Monitor and log suspicious activity
+def log_suspicious_activity(activity_type, details, app):
+    app.logger.warning(f"Suspicious activity detected: {activity_type} - {details}")

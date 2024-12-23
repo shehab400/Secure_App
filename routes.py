@@ -3,7 +3,7 @@ import sqlite3
 import html
 import secrets
 import logging
-from functions import not_valid_input, encrypt_data, decrypt_data, is_valid_email, is_valid_password
+from functions import not_valid_input, encrypt_data, decrypt_data, is_valid_email, is_valid_password, log_suspicious_activity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -28,11 +28,10 @@ limiter = Limiter(
     on_breach=log_rate_limit_exceeded
 )
 
-
 def get_user_from_db(username):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    query = "SELECT * FROM users WHERE username = ?"
+    query = "SELECT username, password FROM users WHERE username = ?"
     cursor.execute(query, (username,))
     user = cursor.fetchone()
     conn.close()
@@ -63,6 +62,8 @@ def comment():
     comments = []
     if request.method == 'POST':
         user_comment = request.form['comment']
+        if "<script>" in user_comment.lower():
+            log_suspicious_activity("XSS attempt", user_comment, app)
         sanitized_comment = html.escape(user_comment)
         
         with open('comments.txt', 'a') as f:
@@ -84,6 +85,7 @@ def transfer():
         
         if not_valid_input(recipient) or not_valid_input(amount):
             app.logger.error("Invalid input for transfer: recipient=%s, amount=%s", recipient, amount)
+            log_suspicious_activity("Invalid transfer input", f"recipient={recipient}, amount={amount}", app)
             return 'Invalid input!', 400
         
         encrepted_recipient = encrypt_data(recipient)
@@ -96,7 +98,7 @@ def transfer():
     
     return render_template('transfer.html', success=success, csrf_token=generate_csrf_token())
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")
 def login():
     if request.method == 'POST':
@@ -105,15 +107,17 @@ def login():
     
         if not_valid_input(username) or not_valid_input(password):
             app.logger.error("Invalid input for login: username=%s", username)
+            log_suspicious_activity("Invalid login input", f"username={username}", app)
             return 'Invalid input!', 400
 
         user = get_user_from_db(username)
-        if user:
+        if user and user[1] == password:  # Compare the stored password with the provided password
             return redirect(f'/home?message=Welcome+back,+{username}') # Redirect to home page
         else:
-            return render_template('login.html', csrf_token=generate_csrf_token() , message = 'Incorrect password or username'), 400
+            log_suspicious_activity("Failed login attempt", f"username={username}", app)
+            return render_template('login.html', csrf_token=generate_csrf_token(), message='Incorrect password or username'), 400
 
-    return render_template('login.html', csrf_token=generate_csrf_token(), message = '')
+    return render_template('login.html', csrf_token=generate_csrf_token(), message='')
 
 @app.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
@@ -125,23 +129,29 @@ def register():
 
         if not_valid_input(username) or not is_valid_email(email) or not is_valid_password(password):
             app.logger.error("Invalid input for registration: username=%s, email=%s", username, email)
+            log_suspicious_activity("Invalid registration input", f"username={username}, email={email}", app)
             return 'Invalid input!', 400
 
         if get_user_from_db(username):
             app.logger.error("User already exists: username=%s", username)
+            log_suspicious_activity("Duplicate registration attempt", f"username={username}", app)
             return 'User already exists!', 400
 
         #use hash function to store password
 
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password))
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         conn.commit()
         conn.close()
 
-        return redirect('/')
+        return redirect('/login')
 
     return render_template('register.html', csrf_token=generate_csrf_token())
+
+@app.route('/')
+def landing():
+    return render_template('landing.html')
 
 @app.errorhandler(400)
 def bad_request_error(error):
