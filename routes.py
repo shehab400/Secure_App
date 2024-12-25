@@ -4,8 +4,6 @@ import html
 import secrets
 import logging
 from functions import not_valid_input, encrypt_data, decrypt_data, is_valid_email, is_valid_password, log_suspicious_activity
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -20,13 +18,6 @@ log.setLevel(logging.ERROR)
 def log_rate_limit_exceeded(response):
     app.logger.error("Rate limit exceeded: %s", response)
     return response
-# Set up rate limiting
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "50 per hour"],
-    on_breach=log_rate_limit_exceeded
-)
 
 def get_user_from_db(username):
     conn = sqlite3.connect('users.db')
@@ -51,13 +42,11 @@ def csrf_protect():
             return "CSRF token missing or incorrect!", 400
 
 @app.route('/home')
-@limiter.limit("10 per minute")
 def home():
     message = request.args.get('message', 'Welcome!')
     return render_template('home.html', message=message)
 
 @app.route('/comment', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 def comment():
     comments = []
     if request.method == 'POST':
@@ -76,7 +65,6 @@ def comment():
     return render_template('comments.html', comments=comments, csrf_token=generate_csrf_token())
 
 @app.route('/transfer', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 def transfer():
     success = False
     if request.method == 'POST':
@@ -99,7 +87,6 @@ def transfer():
     return render_template('transfer.html', success=success, csrf_token=generate_csrf_token())
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("10 per minute")
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -120,7 +107,6 @@ def login():
     return render_template('login.html', csrf_token=generate_csrf_token(), message='')
 
 @app.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 def register():
     if request.method == 'POST':
         username = request.form['username']
@@ -152,6 +138,37 @@ def register():
 @app.route('/')
 def landing():
     return render_template('landing.html')
+
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    # Fetch security logs, failed login attempts, potential threats, and user activities from the log file or database
+    logs = []
+    failed_logins = []
+    threats = []
+    user_activities = []
+
+    # Example data fetching logic (replace with actual data fetching)
+    with open('app.log', 'r') as f:
+        for line in f.readlines():
+            parts = line.split(' ')
+            if len(parts) > 2:
+                timestamp = parts[0]
+                event = parts[1]
+                details = ' '.join(parts[2:])
+                logs.append({'timestamp': timestamp, 'event': event, 'details': details})
+
+    # Example user activity fetching logic (replace with actual data fetching)
+    with open('app.log', 'r') as f:
+        for line in f.readlines():
+            parts = line.split(' ')
+            if len(parts) > 2:
+                timestamp = parts[0]
+                username = parts[1]
+                activity = ' '.join(parts[2:])
+                user_activities.append({'timestamp': timestamp, 'username': username, 'activity': activity})
+
+    # Render the admin dashboard template with the fetched data
+    return render_template('admin_dashboard.html', logs=logs, failed_logins=failed_logins, threats=threats, user_activities=user_activities)
 
 @app.errorhandler(400)
 def bad_request_error(error):
