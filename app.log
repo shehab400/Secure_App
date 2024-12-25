@@ -30,3 +30,4 @@ ERROR:routes:CSRF token missing or incorrect!
 ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 ERROR:routes:CSRF token missing or incorrect!
 ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:CSRF token missing or incorrect!
