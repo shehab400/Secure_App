@@ -1,1 +1,39 @@
 WARNING:routes:Suspicious activity detected: Failed login attempt - username=omar
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+WARNING:routes:Suspicious activity detected: Failed login attempt - username=admin
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+ERROR:routes:User already exists: username=shehab1
+WARNING:routes:Suspicious activity detected: Duplicate registration attempt - username=shehab1
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Invalid input for login: username=shehab11<
+WARNING:routes:Suspicious activity detected: Invalid login input - username=shehab11<
+ERROR:routes:Invalid input for login: username=shehab11<
+WARNING:routes:Suspicious activity detected: Invalid login input - username=shehab11<
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:Invalid input for login: username=shehab11<
+WARNING:routes:Suspicious activity detected: Invalid login input - username=shehab11<
+ERROR:routes:Invalid input for login: username=shehab11<
+WARNING:routes:Suspicious activity detected: Invalid login input - username=shehab11<
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+ERROR:routes:Rate limit exceeded: 5 per 1 minute
+WARNING:routes:Suspicious activity detected: Failed login attempt - username=OR '1=1'
+WARNING:routes:Suspicious activity detected: Failed login attempt - username=OR '1=1'
+WARNING:routes:Suspicious activity detected: Failed login attempt - username=hhh
+ERROR:routes:CSRF token missing or incorrect!
+ERROR:routes:Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.

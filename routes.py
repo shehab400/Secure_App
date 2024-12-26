@@ -3,7 +3,10 @@ import sqlite3
 import html
 import secrets
 import logging
-from functions import not_valid_input, encrypt_data, decrypt_data, is_valid_email, is_valid_password, log_suspicious_activity
+from functions import not_valid_input, encrypt_data, decrypt_data, is_valid_email, is_valid_password, log_suspicious_activity,hash_password
+from werkzeug.security import check_password_hash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -14,6 +17,13 @@ logging.basicConfig(filename='app.log', level=logging.ERROR)
 # Disable Werkzeug logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+# Set up rate limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 def log_rate_limit_exceeded(response):
     app.logger.error("Rate limit exceeded: %s", response)
@@ -87,6 +97,7 @@ def transfer():
     return render_template('transfer.html', success=success, csrf_token=generate_csrf_token())
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -98,7 +109,7 @@ def login():
             return 'Invalid input!', 400
 
         user = get_user_from_db(username)
-        if user and user[1] == password:  # Compare the stored password with the provided password
+        if user and check_password_hash(user[1], password):  # Compare the stored password with the provided password
             return redirect(f'/home?message=Welcome+back,+{username}') # Redirect to home page
         else:
             log_suspicious_activity("Failed login attempt", f"username={username}", app)
@@ -107,6 +118,7 @@ def login():
     return render_template('login.html', csrf_token=generate_csrf_token(), message='')
 
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def register():
     if request.method == 'POST':
         username = request.form['username']
@@ -124,10 +136,10 @@ def register():
             return 'User already exists!', 400
 
         #use hash function to store password
-
+        hashed_password = hash_password(password)
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
         conn.commit()
         conn.close()
 
@@ -184,6 +196,12 @@ def not_found_error(error):
 def internal_error(error):
     app.logger.error(f"Server Error: {error}")
     return render_template('error.html', message="Internal Server Error!"), 500
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    app.logger.error("Rate limit exceeded: %s", e.description)
+    return render_template('error.html', message="Rate limit exceeded! Please try again later."), 429
+
 
 if __name__ == "__main__":
     app.run(debug=True)

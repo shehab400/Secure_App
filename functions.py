@@ -1,5 +1,6 @@
 import re
 from cryptography.fernet import Fernet
+from werkzeug.security import generate_password_hash
 
 key = Fernet.generate_key()
 cipher_suite = Fernet(key)
@@ -26,3 +27,6 @@ def is_valid_password(password):
 # Monitor and log suspicious activity
 def log_suspicious_activity(activity_type, details, app):
     app.logger.warning(f"Suspicious activity detected: {activity_type} - {details}")
+
+def hash_password(password):
+    return generate_password_hash(password)
